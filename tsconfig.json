@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "noImplicitAny": true,
+    "removeComments": true,
+    "sourceMap": true,
+    "module": "CommonJS",
+    "outDir": "build",
+		"moduleResolution":"node"
+  },
+  "include": [
+    "src/**/*.ts"
+  ]
+}
