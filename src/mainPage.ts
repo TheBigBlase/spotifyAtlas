@@ -1,15 +1,22 @@
 import { Artists } from './artist';
 import { driver, By, until, seleError } from './driver';
 
+let delay = (ms:number):Promise<void> => { //wait 1 sec then retry
+					return new Promise(resolve => {
+							setTimeout(resolve, ms);
+					});
+			}
+
 const getRootArtist = async():Promise<void> =>{
 	
 	//get top 100 worldwide playlist
 	await driver.get('https://open.spotify.com/playlist/37i9dQZEVXbNG2KDcFcKOF');
 
-	async function clickCookies(){
+	async function clickCookies():Promise<void>{
 		let cookies = '//*[@id="onetrust-reject-all-handler"]';
 		let res = await driver.wait(until.elementLocated(By.xpath(cookies)));
-		res.click();
+		await res.click();
+		return;
 	}
 
 	async function mainArtist(){
@@ -22,15 +29,11 @@ const getRootArtist = async():Promise<void> =>{
 		await clickCookies();
 	}
 	catch(e){
+		console.log("err", e);
 		if(e instanceof seleError.ElementClickInterceptedError || e instanceof seleError.ElementNotInteractableError){
 			console.log("waiting 1 sec");
-			let delay = (ms:number):Promise<void> => { //wait 1 sec then retry
-					return new Promise(resolve => {
-							setTimeout(resolve, ms);
-					});
-			}
-		console.log("wait cookies");
-		await delay(1000);
+			
+		await delay(2000);
 		await clickCookies();
 		}
 	}

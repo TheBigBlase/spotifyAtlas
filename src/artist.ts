@@ -1,10 +1,11 @@
 import { By, until, WebDriver, WebElement} from './driver';
+import {appendFileSync} from 'fs';
 
 export class Artists{
 	private mMonthyListeners:number=0;
 	private mName:string;
 	private mUrl:string;
-	private mTop:number = 3;//TODO better top
+	private mTop:number = 5;//TODO better top
 	private mDepth:number;
 	private mMaxDepth = 5;
 	private mHasChildFinished:Boolean = false;
@@ -20,34 +21,37 @@ export class Artists{
 	}
 
 	async getSimilar(driver:WebDriver):Promise<void>{
-		if(this.mDepth >= this.mMaxDepth)
-			return;
-		while(!this.mHasChildFinished){
-			let xpath:string[] = [
-				'//a[text() ="Fans also like"]/following::a[2]',
-				'//a[text() ="Fans also like"]/following::a[3]',
-				'//a[text() ="Fans also like"]/following::a[4]'
-			];
+		if(this.mDepth < this.mMaxDepth){
+			while(!this.mHasChildFinished){
+				let xpath:string[] = [
+					'//a[text() ="Fans also like"]/following::a[2]',
+					'//a[text() ="Fans also like"]/following::a[3]',
+					'//a[text() ="Fans also like"]/following::a[4]',
+					'//a[text() ="Fans also like"]/following::a[5]',
+					'//a[text() ="Fans also like"]/following::a[6]'
+				];
 
-			await driver.get(this.mUrl);
-			for(let k = 0; k < this.mTop ; k++){
-				let res:string|WebElement = await driver.wait(
-					until.elementLocated(By.xpath(xpath[k])));
-				res = await res.getAttribute("href");//list of links
-				this.mChildren.push(res);
+				await driver.get(this.mUrl);
+				for(let k = 0; k < this.mTop ; k++){
+					let res:string|WebElement = await driver.wait(
+						until.elementLocated(By.xpath(xpath[k])));
+					res = await res.getAttribute("href");//list of links
+					this.mChildren.push(res);
+				}
+
+				for(let l = 0; l < this.mTop ; l++){
+					await driver.get(this.mChildren[l]);
+					await driver.wait(until.elementLocated(By.xpath(xpath[l])))
+						.getAttribute("href");
+					let artist = await new Artists(this.mDepth + 1, 
+																				 await driver.getCurrentUrl()).getProp(driver);
+					await artist.getSimilar(driver);
+				}
+
+				this.mHasChildFinished = true;
 			}
-
-			for(let l = 0; l < this.mTop ; l++){
-				await driver.get(this.mChildren[l]);
-				await driver.wait(until.elementLocated(By.xpath(xpath[l])))
-					.getAttribute("href");
-				let artist = await new Artists(this.mDepth + 1, 
-																			 await driver.getCurrentUrl()).getProp(driver);
-				await artist.getSimilar(driver);
-			}
-
-			this.mHasChildFinished = true;
 		}
+		this.writeToJson();
 	}
 
 	setTop(top:number){
@@ -76,12 +80,30 @@ export class Artists{
 			description = await getDescritpion();
 		}
 
-		this.mMonthyListeners = parseInt(description.match(regexNumber)[0]
+		try{this.mMonthyListeners = parseInt(description.match(regexNumber)[0]
 																		 .replace(regexRemoveCommas, ''));
 		this.mName = description.match(regexName)[0];
+		}
+		catch(err){
+			console.log(this.mName);
+		}
 
 		console.log("[ARTIST] name : " + this.mName + " listeners : " + this.mMonthyListeners
 							 + " Depth : " + this.mDepth + " URL : " + this.mUrl);
 		return this;
 	}
+
+	async writeToJson(){
+		let name:string = this.mName;//why do i have to do this
+		let res = JSON.stringify({
+			[ name ]:{
+				"mMonthyListeners":this.mMonthyListeners, 
+				"similar":[this.mChildren],
+				"url":this.mUrl
+			}
+		}, null, 4);//pretty print
+		appendFileSync('resNbChildren' + this.mTop + '.json', res);
+	}
+
 }
+
