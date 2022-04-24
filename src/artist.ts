@@ -34,7 +34,6 @@ export class Artists{
 				let res:string|WebElement = await driver.wait(
 					until.elementLocated(By.xpath(xpath[k])));
 				res = await res.getAttribute("href");//list of links
-				console.log(res);
 				this.mChildren.push(res);
 			}
 
@@ -42,7 +41,6 @@ export class Artists{
 				await driver.get(this.mChildren[l]);
 				await driver.wait(until.elementLocated(By.xpath(xpath[l])))
 					.getAttribute("href");
-				console.log(this.mUrl + await driver.getCurrentUrl())
 				let artist = await new Artists(this.mDepth + 1, 
 																			 await driver.getCurrentUrl()).getProp(driver);
 				await artist.getSimilar(driver);
@@ -75,7 +73,7 @@ export class Artists{
 					});
 			}
 			await delay(300);
-			getDescritpion()	;
+			description = await getDescritpion();
 		}
 
 		this.mMonthyListeners = parseInt(description.match(regexNumber)[0]

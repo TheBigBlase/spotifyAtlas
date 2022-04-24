@@ -13,7 +13,7 @@ const getRootArtist = async():Promise<void> =>{
 	}
 
 	async function mainArtist(){
-		let artist = "/html/body/div[3]/div/div[2]/div[3]/div[1]/div[2]/div[2]/div/div/div[2]/main/section/div[2]/div[3]/div/div[2]/div[2]/div[1]/div/div[2]/div/span/a";
+		let artist = "/html/body/div[3]/div/div[2]/div[3]/div[1]/div[2]/div[2]/div/div/div[2]/main/div/section/div[2]/div[2]/div/div/button/div/following::a[1]";
 		let res = await driver.wait(until.elementLocated(By.xpath(artist)));
 		await res.click();
 	}
@@ -29,14 +29,17 @@ const getRootArtist = async():Promise<void> =>{
 							setTimeout(resolve, ms);
 					});
 			}
+		console.log("wait cookies");
 		await delay(1000);
 		await clickCookies();
 		}
 	}
-	console.log("after wait cookies");
+	console.log("after cookies");
 
 	try{
+		console.log("im here");
 		await mainArtist();
+		console.log("left main artist");
 	}
 	catch(e){
 		if(e instanceof seleError.ElementClickInterceptedError || e instanceof seleError.ElementNotInteractableError){
